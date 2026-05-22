@@ -58,8 +58,11 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      - name: 配置 npm registry
+        run: echo "registry=https://registry.npmjs.org/" > .npmrc
+
       - name: 安装依赖
-        run: npm ci
+        run: npm ci --registry=https://registry.npmjs.org/
 
       - name: 构建项目
         run: npm run build

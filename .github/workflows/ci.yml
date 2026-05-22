@@ -37,8 +37,11 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      - name: 配置 npm registry
+        run: echo "registry=https://registry.npmjs.org/" > .npmrc
+
       - name: 安装依赖
-        run: npm ci
+        run: npm ci --registry=https://registry.npmjs.org/
 
       # 如果项目配置了 ESLint，取消下面注释
       # - name: ESLint 检查
@@ -67,8 +70,11 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      - name: 配置 npm registry
+        run: echo "registry=https://registry.npmjs.org/" > .npmrc
+
       - name: 安装依赖
-        run: npm ci
+        run: npm ci --registry=https://registry.npmjs.org/
 
       # 如果配置了 vitest 测试框架，取消下面注释
       # - name: 运行单元测试
@@ -101,8 +107,11 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      - name: 配置 npm registry
+        run: echo "registry=https://registry.npmjs.org/" > .npmrc
+
       - name: 安装依赖
-        run: npm ci
+        run: npm ci --registry=https://registry.npmjs.org/
 
       - name: 构建项目
         run: npm run build
