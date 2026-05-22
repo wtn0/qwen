@@ -1,1 +1,31 @@
-Nothing needs to be added to .gitignore since only a markdown file (`agent.md`) was added, which is a source/config file and not a build artifact, dependency, or temporary file.
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Coverage
+coverage/
+
+# Cache
+.cache/
+*.tsbuildinfo

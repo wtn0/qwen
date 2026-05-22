@@ -1,0 +1,116 @@
+# ===================================================
+# CD Workflow — 自动部署
+# 触发条件: push 到 main 分支（CI 通过后）
+# 部署目标: GitHub Pages（默认）
+#
+# 也支持其他平台，请根据需要取消注释相应步骤：
+#   - Vercel（零配置，推荐生产环境）
+#   - Netlify
+#   - 自有服务器 (rsync/SSH)
+# ===================================================
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    # 仅当 src 或配置文件变更时触发部署
+    paths:
+      - 'src/**'
+      - 'index.html'
+      - 'vite.config.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/deploy.yml'
+  # 允许手动触发
+  workflow_dispatch:
+
+# 设置 GITHUB_TOKEN 权限，用于 GitHub Pages 部署
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 并发控制：同一时间只允许一个部署运行
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # ==========================================
+  # Job: 构建 & 部署到 GitHub Pages
+  # ==========================================
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 构建项目
+        run: npm run build
+
+      # ---- 方案 A: GitHub Pages（默认，已启用） ----
+      - name: 配置 GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: 上传构建产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      # ---- 方案 B: Vercel 部署（注释掉 GitHub Pages 部分后启用） ----
+      # 需要先在仓库 Secrets 中配置 VERCEL_TOKEN 和 VERCEL_ORG_ID / VERCEL_PROJECT_ID
+      #
+      # - name: Deploy to Vercel
+      #   uses: amondnet/vercel-action@v25
+      #   with:
+      #     vercel-token: ${{ secrets.VERCEL_TOKEN }}
+      #     vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+      #     vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+      #     vercel-args: '--prod'
+
+      # ---- 方案 C: Netlify 部署（注释掉 GitHub Pages 部分后启用） ----
+      # 需要先在仓库 Secrets 中配置 NETLIFY_AUTH_TOKEN 和 NETLIFY_SITE_ID
+      #
+      # - name: Deploy to Netlify
+      #   uses: nwtgck/actions-netlify@v3
+      #   with:
+      #     publish-dir: './dist'
+      #     production-branch: main
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     deploy-message: "Deploy from GitHub Actions"
+      #   env:
+      #     NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      #     NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+      # ---- 方案 D: 自有服务器 SCP 部署（注释掉 GitHub Pages 部分后启用） ----
+      # 需要先在仓库 Secrets 中配置 SSH_HOST, SSH_USER, SSH_KEY, DEPLOY_PATH
+      #
+      # - name: Deploy to Server
+      #   uses: appleboy/scp-action@v0.1.7
+      #   with:
+      #     host: ${{ secrets.SSH_HOST }}
+      #     username: ${{ secrets.SSH_USER }}
+      #     key: ${{ secrets.SSH_KEY }}
+      #     source: 'dist/*'
+      #     target: ${{ secrets.DEPLOY_PATH }}
+      #     strip_components: 1
